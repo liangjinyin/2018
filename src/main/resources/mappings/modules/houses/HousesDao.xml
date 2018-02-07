@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.houses.dao.HousesDao">
+    
+	<sql id="housesColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.price AS "price",
+		a.type AS "type",
+		a.area AS "area",
+		a.num  AS "num",
+		a.cases as "cases",
+		a.spare as "spare"
+	</sql>
+	
+	<sql id="housesJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="Houses" >
+		SELECT 
+			<include refid="housesColumns"/>
+		FROM b_houses a
+		<include refid="housesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Houses" >
+		SELECT 
+			<include refid="housesColumns"/>
+		FROM b_houses a
+		<include refid="housesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="price != null and price != ''">
+				AND a.price = #{price}
+			</if>
+			<if test="area != null and area != ''">
+				AND a.area = #{area}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Houses" >
+		SELECT 
+			<include refid="housesColumns"/>
+		FROM b_houses a
+		<include refid="housesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+	<insert id="insert">
+		INSERT INTO b_houses(
+			
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			price,
+			type,
+			area,
+			num,
+			cases,
+			spare 
+		) VALUES (
+			
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{price},
+			#{type},
+			#{area},
+			#{num},
+			#{cases},
+			#{spare}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_houses SET 	
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			price = #{price},
+			type = #{type},
+			area = #{area},
+			num  = #{num},
+			cases = #{cases},
+			spare = #{spare}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_houses
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_houses SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Houses" statementType="STATEMENT">
+		select * FROM b_houses  where ${propertyName} = '${value}'
+	</select>
+	<select id="getListByCasesName" resultType="Houses" parameterType="String">
+		select <include refid="housesColumns"/>
+		 FROM b_houses a  where a.cases = #{casesName}
+	</select>
+	
+</mapper>

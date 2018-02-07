@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.basetest.dao.BaseTestDao">
+    
+	<sql id="baseTestColumns">
+		a.id AS "id",
+		a.title AS "title",
+		a.test_man AS "testMan",
+		a.product AS "product",
+		a.dataupdate AS "dataupdate",
+		a.testtime AS "testtime",
+		a.test_describe AS "testDescribe",
+		a.workload AS "workload",
+		a.test_execute AS "testExecute",
+		a.pass AS "pass",
+		a.casenumber AS "casenumber",
+		a.newbug AS "newbug",
+		a.seriousbug AS "seriousbug",
+		a.commonbug AS "commonbug",
+		a.slightbug AS "slightbug",
+		a.suggestbug AS "suggestbug",
+		a.conclusion AS "conclusion",
+		a.finishtime AS "finishtime",
+		a.edition AS "edition",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks"
+	</sql>
+	<sql id="baseTestColumnss">
+		a.id AS "id",
+		a.title AS "title",
+		a.test_man AS "testMan",
+		a.product AS "product",
+		a.dataupdate AS "dataupdate",
+		a.testtime AS "testtime",
+		a.test_describe AS "testDescribe",
+		a.workload AS "workload",
+		a.test_execute AS "testExecute",
+		a.pass AS "pass",
+		a.casenumber AS "casenumber",
+		a.newbug AS "newbug",
+		a.seriousbug AS "seriousbug",
+		a.commonbug AS "commonbug",
+		a.slightbug AS "slightbug",
+		a.suggestbug AS "suggestbug",
+		a.conclusion AS "conclusion",
+		a.finishtime AS "finishtime",
+		a.edition AS "edition",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		tp.pname AS pname
+	</sql>
+	
+	<sql id="baseTestJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+	</sql>
+	<sql id="baseTestJoinss">
+		LEFT JOIN(SELECT name AS pname,id AS pid FROM zt_product )tp ON a.product = tp.pid
+	</sql>
+    
+	<select id="get" resultType="BaseTest" >
+		SELECT 
+			<include refid="baseTestColumns"/>
+		FROM b_test a
+		<include refid="baseTestJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="BaseTest" >
+		SELECT 
+			<include refid="baseTestColumnss"/>
+		FROM b_test a
+			<include refid="baseTestJoinss"/>
+			<include refid="baseTestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="product != null and product != ''">
+				AND pname
+				LIKE 
+					<if test="dbName == 'oracle'">'%'||#{product}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{product}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{product},'%')</if>
+			</if>
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="BaseTest" >
+		SELECT 
+			<include refid="baseTestColumns"/>
+		FROM b_test a
+		<include refid="baseTestJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_test(
+			<!-- id, -->
+			title,
+			test_man,
+			product,
+			dataupdate,
+			testtime,
+			test_describe,
+			workload,
+			test_execute,
+			pass,
+			casenumber,
+			newbug,
+			seriousbug,
+			commonbug,
+			slightbug,
+			suggestbug,
+			conclusion,
+			finishtime,
+			edition,
+			del_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks
+		) VALUES (
+		<!-- 	#{id}, -->
+			#{title},
+			#{testMan},
+			#{product},
+			#{dataupdate},
+			#{testtime},
+			#{testDescribe},
+			#{workload},
+			#{testExecute},
+			#{pass},
+			#{casenumber},
+			#{newbug},
+			#{seriousbug},
+			#{commonbug},
+			#{slightbug},
+			#{suggestbug},
+			#{conclusion},
+			#{finishtime},
+			#{edition},
+			#{delFlag},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_test SET 	
+			title = #{title},
+			test_man = #{testMan},
+			product = #{product},
+			dataupdate = #{dataupdate},
+			testtime = #{testtime},
+			test_describe = #{testDescribe},
+			workload = #{workload},
+			test_execute = #{testExecute},
+			pass = #{pass},
+			casenumber = #{casenumber},
+			newbug = #{newbug},
+			seriousbug = #{seriousbug},
+			commonbug = #{commonbug},
+			slightbug = #{slightbug},
+			suggestbug = #{suggestbug},
+			conclusion = #{conclusion},
+			finishtime = #{finishtime},
+			edition = #{edition},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_test
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_test SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="BaseTest" statementType="STATEMENT">
+		select * FROM b_test  where ${propertyName} = '${value}'
+	</select>
+	<!-- 获取基线测试最大id -->
+	<select id="getBaseTestId" resultType="String" statementType="STATEMENT">
+		select id FROM b_test  a order by a.create_date DESC LIMIT 1
+	</select>
+	
+</mapper>

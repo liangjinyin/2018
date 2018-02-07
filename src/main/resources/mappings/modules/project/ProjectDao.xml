@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.project.dao.ProjectDao">
+    
+	<sql id="projectColumns">
+		a.id AS "id",
+		a.requirements AS "requirements",
+		a.name AS "name",
+		a.sale_manager AS "saleManager",
+		a.pre_sale_manager AS "preSaleManager",
+		a.area AS "area",
+		a.type AS "type",
+		a.budget AS "budget",
+		a.sale_stage AS "saleStage",
+		a.bid AS "bid",
+		a.core_date AS "coreDate",
+		a.department AS "department",
+		a.decision_process AS "decisionProcess",
+		a.decision_manager AS "decisionManager",
+		a.core_manager AS "coreManager",
+		a.major_manager AS "majorManager",
+		a.relationship AS "relationship",
+		a.stage AS "stage",
+		a.competitor AS "competitor",
+		a.order_date AS "orderDate",
+		a.order_rate AS "orderRate",
+		a.advance_service AS "advanceService",
+		a.project_risk AS "projectRisk",
+		a.coping_strategies AS "copingStrategies",
+		a.signing_time AS "signingTime",
+		a.contract_amount AS "contractAmount",
+		a.remark AS "remark",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.state AS "state",
+		a.quotation AS "quotation",
+		a.cost AS "cost",
+		a.project_manager AS "projectManager"
+	</sql>
+	
+	<sql id="projectJoins">
+		LEFT JOIN sys_office department ON department.id = a.department
+		LEFT JOIN sys_user majorManager ON majorManager.id = a.major_manager
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+	<select id="get" resultType="Project" >
+		SELECT 
+			<include refid="projectColumns"/>
+		FROM b_project a
+		<include refid="projectJoins"/>
+		WHERE a.id = #{id} 
+	</select>
+    
+	<select id="getOne" resultType="Project"  >
+		SELECT 
+			<include refid="projectColumns"/>
+		FROM b_project a
+		<include refid="projectJoins"/>
+		WHERE  
+		<if test="requirements != null and requirements != ''">
+			 a.requirements = #{requirements}
+		</if>
+		limit 1
+	</select>
+	
+	<select id="findList" resultType="Project" >
+		SELECT 
+			<include refid="projectColumns"/>
+		FROM b_project a
+		<include refid="projectJoins"/>
+		<where>
+		
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="area != null and area != ''">
+				AND a.area LIKE 
+					<if test="dbName == 'oracle'">'%'||#{area}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{area}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{area},'%')</if>
+			</if>
+			
+ 
+			<!-- jinyin -->
+			<!-- <if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="area != null and area != ''">
+				AND a.area LIKE 
+					<if test="dbName == 'oracle'">'%'||#{area}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{area}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{area},'%')</if>
+			</if> -->
+ 
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Project" >
+		SELECT 
+			<include refid="projectColumns"/>
+		FROM b_project a
+		<!-- <include refid="projectJoins"/> -->
+		<where>
+			a.del_flag = 0
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyColumn="id"
+		keyProperty="id" >
+		INSERT INTO b_project(
+			<!-- id, -->
+			requirements,
+			name,
+			sale_manager,
+			pre_sale_manager,
+			area,
+			type,
+			budget,
+			bid,
+			core_date,
+			department,
+			decision_process,
+			decision_manager,
+			core_manager,
+			major_manager,
+			relationship,
+			stage,
+			competitor,
+			order_date,
+			order_rate,
+			advance_service,
+			project_risk,
+			coping_strategies,
+			signing_time,
+			contract_amount,
+			remark,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			state,
+			quotation,
+			cost,
+			project_manager
+		) VALUES (
+			<!-- #{id}, -->
+			#{requirements},
+			#{name},
+			#{saleManager},
+			#{preSaleManager},
+			#{area},
+			#{type},
+			#{budget},
+			#{bid},
+			#{coreDate},
+			#{department},
+			#{decisionProcess},
+			#{decisionManager},
+			#{coreManager},
+			#{majorManager},
+			#{relationship},
+			#{stage},
+			#{competitor},
+			#{orderDate},
+			#{orderRate},
+			#{advanceService},
+			#{projectRisk},
+			#{copingStrategies},
+			#{signingTime},
+			#{contractAmount},
+			#{remark},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{delFlag},
+			#{state},
+			#{quotation},
+			#{cost},
+			#{projectManager}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_project SET 	
+		    requirements = #{requirements},
+			name = #{name},
+			sale_manager = #{saleManager},
+			pre_sale_manager = #{preSaleManager},
+			area = #{area},
+			type = #{type},
+			sale_stage=#{saleStage},
+			budget = #{budget},
+			bid = #{bid},
+			core_date = #{coreDate},
+			department = #{department},
+			decision_process = #{decisionProcess},
+			decision_manager = #{decisionManager},
+			core_manager = #{coreManager},
+			major_manager = #{majorManager},
+			relationship = #{relationship},
+			stage = #{stage},
+			competitor = #{competitor},
+			order_date = #{orderDate},
+			order_rate = #{orderRate},
+			advance_service = #{advanceService},
+			project_risk = #{projectRisk},
+			coping_strategies = #{copingStrategies},
+			signing_time = #{signingTime},
+			contract_amount = #{contractAmount},
+			remark = #{remark},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			state = #{state},
+			quotation = #{quotation},
+			cost = #{cost},
+			project_manager = #{projectManager}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStage">
+		UPDATE b_project SET 	
+			sale_stage=#{saleStage},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_project
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_project SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findIndex" resultType="map">
+		SELECT
+		p.id ,
+		p.`name`,
+		p.stage,
+		r.core,
+		p.order_rate,
+		p.order_date,
+		p.contract_amount,
+		p.sale_stage,
+		c.contacts,
+		c.`name` AS customerName,
+		c.phone,
+		p.competitor,
+		p.sale_manager,
+		p.pre_sale_manager,
+		p.remark
+		FROM
+		b_project AS p
+		INNER JOIN b_requirements r ON r.id= p.requirements
+		LEFT JOIN b_customer c ON c.id=r.customer
+	</select>
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Project" statementType="STATEMENT">
+		select * FROM b_project  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

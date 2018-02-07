@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.statistics.dao.StatisticsDao">
+    
+	<sql id="StatisticsColumns">
+		
+	</sql>
+	
+	<sql id="StatisticsJoins">
+		
+	</sql>
+	
+	<resultMap id="ProductIterationMap" type="com.tospur.modules.statistics.entity.ProductIteration">
+        <result property="product" column="product"/>
+        <result property="proManager" column="pro_manager"/>
+        <collection property="iteraters" ofType="com.tospur.modules.product.entity.Iterater">
+        	<id property="id" column="id"/>
+        	<result property="beginTime" column="begintime"/>
+        	<result property="endTime" column="endtime"/>
+        	<result property="name" column="name"/>
+        </collection>
+    </resultMap>
+    
+    <resultMap type="com.tospur.modules.statistics.entity.EmployeeLoad" id="EmployeeLoadMap">
+    	<result property="employee" column="assigned_to"/>
+    	<collection property="iterationTasks" ofType="com.tospur.modules.statistics.entity.IterationTask">
+    		<result property="iterater" column="name"/>
+    		<collection property="taskInfos" ofType="com.tospur.modules.task.entity.TaskInfo">
+    			<result property="estimate" column="estimate"/>
+    			<result property="surplus" column="surplus"/>
+    		</collection>
+    	</collection>
+    </resultMap>
+    
+    <resultMap type="com.tospur.modules.statistics.entity.TaskCollect" id="TaskCollectMap">
+    	<result property="finishedBy" column="finished_by"/>
+    	<collection property="taskInfos" ofType="com.tospur.modules.task.entity.TaskInfo">
+    		<id property="id" column="id"/>
+    		<result property="name" column="name"/>
+    		<result property="pri" column="pri"/>
+    		<result property="estStarted" column="est_started"/>
+    		<result property="realStarted" column="real_started"/>
+    		<result property="deadline" column="deadline"/>
+    		<result property="finishedDate" column="finished_date"/>
+    		<result property="estimate" column="estimate"/>
+    		<result property="consumed" column="consumed"/>
+    		<result property="status" column="status"/>
+    	</collection>
+    </resultMap>
+    
+    <select id="findAllList" resultMap="ProductIterationMap">
+    	select 
+    	p.name product,p.pro_manager,i.id,i.name,i.beginTime,i.endTime 
+    	from 
+    	zt_product p,zt_iteration i
+    	<!-- LEFT JOIN sys_user uy ON uy.name=p.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id -->
+		
+    	<where>
+    		p.name = i.product
+    		
+			<if test="product != null and product != ''">
+				AND i.product LIKE concat('%',#{product},'%')
+			</if>
+			<if test="beginTime != null and beginTime != ''">
+				AND i.begintime >=  #{beginTime}
+			</if>
+			<if test="endTime != null and endTime != ''">
+				AND i.endtime &lt;= #{endTime}
+			</if>
+		</where> 
+		<!-- 数据范围的过滤 -->
+		<!-- ${sqlMap.dsf} -->
+    	ORDER BY 
+    	p.create_date DESC,i.create_date DESC
+    </select>
+    
+    <select id="sumEstimateByIterater" resultType="String">
+    	select SUM(estimate) FROM b_task WHERE iteration = #{iteration} GROUP BY iteration
+    </select>
+    
+    <select id="sumConsumedByIterater" resultType="String">
+    	select SUM(consumed) FROM b_task WHERE iteration = #{iteration} GROUP BY iteration
+    </select>
+    
+    <select id="findEmployeeLoadList" resultMap="EmployeeLoadMap">
+   	    	SELECT 
+   	    		t.assigned_to,i.name,t.estimate,t.surplus 
+   	    	from 
+   	    		sys_user u,b_task t,zt_iteration i 
+   	    	<where>
+	    		u.name = t.assigned_to AND t.iteration = i.id
+	    		
+				<if test="name != null and name != ''">
+					AND u.name LIKE concat('%',#{name},'%')
+				</if>
+				<if test="beginTime != null and beginTime != ''">
+					AND i.begintime >=  #{beginTime}
+				</if>
+				<if test="endTime != null and endTime != ''">
+					AND i.endtime &lt;= #{endTime}
+				</if>
+			</where>
+			ORDER BY 
+    			i.id DESC
+    </select>
+    
+    <select id="findTaskCollectList" resultMap="TaskCollectMap">
+    	SELECT 
+			t.finished_by,t.id,t.name,t.pri,t.est_started,t.real_started,t.deadline,t.finished_date,t.estimate,t.consumed,t.status
+ 		from
+ 			sys_user u,b_task t 
+ 		<where>
+    		u.name = t.finished_by
+    		
+			<if test="finishedDate != null and finishedDate != ''">
+				<![CDATA[
+		          AND DATE_FORMAT(t.finished_date, '%Y-%m-%d') =  DATE_FORMAT(#{finishedDate}, '%Y-%m-%d')
+		        ]]>
+			</if>
+		</where>
+		ORDER BY 
+    		t.id DESC
+    </select>
+	
+</mapper>

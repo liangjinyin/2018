@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.task.dao.TaskLogDao">
+    
+	<sql id="taskLogColumns">
+		a.id AS "id",
+		a.task AS "task",
+		a.consumed AS "consumed",
+		a.surplus AS "surplus",
+		a.content AS "content",
+		a.date AS "date",
+		a.status AS "status",
+		a.last_status AS "lastStatus",
+		a.assigned_to AS "assignedTo",
+		a.assigned_date AS "assignedDate",
+		a.last_assigned_to AS "lastAssignedTo",
+		a.last_assigned_date AS "lastAssignedDate",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="taskLogJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+    
+	<select id="get" resultType="TaskLog" >
+		SELECT 
+			<include refid="taskLogColumns"/>
+		FROM b_task_log a
+		<include refid="taskLogJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TaskLog" >
+		SELECT 
+			<include refid="taskLogColumns"/>
+		FROM b_task_log a
+		<include refid="taskLogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TaskLog" >
+		SELECT 
+			<include refid="taskLogColumns"/>
+		FROM b_task_log a
+		<include refid="taskLogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_task_log(
+			<!-- id, -->
+			task,
+			consumed,
+			surplus,
+			content,
+			date,
+			status,
+			last_status,
+			assigned_to,
+			assigned_date,
+			last_assigned_to,
+			last_assigned_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			<!-- #{id}, -->
+			#{task},
+			#{consumed},
+			#{surplus},
+			#{content},
+			#{date},
+			#{status},
+			#{lastStatus},
+			#{assignedTo},
+			#{assignedDate},
+			#{lastAssignedTo},
+			#{lastAssignedDate},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_task_log SET 	
+			task = #{task},
+			consumed = #{consumed},
+			surplus = #{surplus},
+			content = #{content},
+			date = #{date},
+			status = #{status},
+			last_status = #{lastStatus},
+			assigned_to = #{assignedTo},
+			assigned_date = #{assignedDate},
+			last_assigned_to = #{lastAssignedTo},
+			last_assigned_date = #{lastAssignedDate},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_task_log
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_task_log SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TaskLog" statementType="STATEMENT">
+		select * FROM b_task_log  where ${propertyName} = '${value}'
+	</select>
+	
+	<!-- 根据task查找记录 -->
+	<select id="findByTask" resultType="TaskLog" statementType="STATEMENT">
+		select <include refid="taskLogColumns"/> FROM b_task_log a where task = '${value}'
+	</select>
+</mapper>

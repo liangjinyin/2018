@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.project.dao.ProjectLogDao">
+    
+	<sql id="projectLogColumns">
+		a.id AS "id",
+		a.project AS "project",
+		a.project_status AS "projectStatus",
+		a.theme as "theme",
+		a.summary as "summary",
+		
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		  a.follow_date AS "followDate"
+	</sql>
+	
+	<sql id="projectLogJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+    
+	<select id="get" resultType="ProjectLog" >
+		SELECT 
+			<include refid="projectLogColumns"/>
+		FROM b_project_log a
+		<include refid="projectLogJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ProjectLog" >
+		SELECT 
+			<include refid="projectLogColumns"/>
+		FROM b_project_log a
+		<include refid="projectLogJoins"/>
+		<where>
+		
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="project != null and project != ''">
+			 and a.project = #{project}
+		</if>
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ProjectLog" >
+		SELECT 
+			<include refid="projectLogColumns"/>
+		FROM b_project_log a
+		<include refid="projectLogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyColumn="id" keyProperty="id" >
+		INSERT INTO b_project_log(
+			<!-- id, -->
+			project,
+			project_status,
+			theme,
+			summary,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			follow_date
+		) VALUES (
+			<!-- #{id}, -->
+			#{project},
+			#{projectStatus},
+			#{theme},
+			#{summary},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{delFlag},
+			#{followDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_project_log SET 	
+			project = #{project},
+			theme = #{theme},
+			summary = #{summary},
+			project_status = #{projectStatus},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			follow_date = #{followDate}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_project_log
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_project_log SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 跟进项目id删除 -->
+	<update id="deleteByProject">
+		DELETE FROM b_project_log
+		WHERE project = #{project}
+	</update>
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="ProjectLog" statementType="STATEMENT">
+		select * FROM b_project_log  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.task.dao.TaskInfoDao">
+    
+	<sql id="taskInfoColumns">
+		a.id AS "id",
+		a.iteration AS "iteration",
+		a.module AS "module",
+		a.requirement AS "requirement",
+		a.name AS "name",
+		a.description AS "description",
+		a.type AS "type",
+		a.pri AS "pri",
+		a.status AS "status",
+		a.estimate AS "estimate",
+		a.consumed AS "consumed",
+		a.surplus AS "surplus",
+		a.deadline AS "deadline",
+		a.opened_by AS "openedBy",
+		a.opened_date AS "openedDate",
+		a.assigned_to AS "assignedTo",
+		a.assigned_date AS "assignedDate",
+		a.est_started AS "estStarted",
+		a.real_started AS "realStarted",
+		a.finished_by AS "finishedBy",
+		a.finished_date AS "finishedDate",
+		a.canceled_by AS "canceledBy",
+		a.canceled_date AS "canceledDate",
+		a.closed_by AS "closedBy",
+		a.closed_date AS "closedDate",
+		a.closed_reason AS "closedReason",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="taskInfoJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+    
+	<select id="get" resultType="TaskInfo" >
+		SELECT 
+			<include refid="taskInfoColumns"/>
+		FROM b_task a
+		<include refid="taskInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TaskInfo" >
+		SELECT 
+			<include refid="taskInfoColumns"/>
+		FROM b_task a
+		<include refid="taskInfoJoins"/>
+		<where>
+			1 = 1
+			<if test="iteration != null and iteration != ''">
+				AND a.iteration = #{iteration}
+			</if>
+			<if test="status != null and status != ''">
+				<choose>
+					<when test="status == '所有'">
+						AND 1 = 1
+					</when>
+					<when test="status == '未关闭'">
+						AND a.status != '已关闭'
+					</when>
+					<when test="status == '已延期'">
+						<![CDATA[
+							AND a.deadline < NOW()
+		                ]]>
+						AND a.status in('未开始','进行中')
+					</when>
+					<when test="status == '指派给我'">
+						AND a.assigned_to = #{assignedTo}
+					</when>
+					<when test="status == '我完成'">
+						AND a.assigned_to = #{assignedTo} AND a.finished_by = #{finishedBy}
+					</when>
+					<otherwise>
+						AND a.status = #{status}
+					</otherwise>
+				</choose>
+				
+			</if>
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TaskInfo" >
+		SELECT 
+			<include refid="taskInfoColumns"/>
+		FROM b_task a
+		<include refid="taskInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_task(
+			<!-- id, -->
+			iteration,
+			module,
+			requirement,
+			name,
+			description,
+			type,
+			pri,
+			status,
+			estimate,
+			consumed,
+			surplus,
+			deadline,
+			opened_by,
+			opened_date,
+			assigned_to,
+			assigned_date,
+			est_started,
+			real_started,
+			finished_by,
+			finished_date,
+			canceled_by,
+			canceled_date,
+			closed_by,
+			closed_date,
+			closed_reason,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+		<!-- 	#{id}, -->
+			#{iteration},
+			#{module},
+			#{requirement},
+			#{name},
+			#{description},
+			#{type},
+			#{pri},
+			#{status},
+			#{estimate},
+			#{consumed},
+			#{surplus},
+			#{deadline},
+			#{openedBy},
+			#{openedDate},
+			#{assignedTo},
+			#{assignedDate},
+			#{estStarted},
+			#{realStarted},
+			#{finishedBy},
+			#{finishedDate},
+			#{canceledBy},
+			#{canceledDate},
+			#{closedBy},
+			#{closedDate},
+			#{closedReason},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_task SET 	
+			iteration = #{iteration},
+			module = #{module},
+			requirement = #{requirement},
+			name = #{name},
+			description = #{description},
+			type = #{type},
+			pri = #{pri},
+			status = #{status},
+			estimate = #{estimate},
+			consumed = #{consumed},
+			surplus = #{surplus},
+			deadline = #{deadline},
+			opened_by = #{openedBy},
+			opened_date = #{openedDate},
+			assigned_to = #{assignedTo},
+			assigned_date = #{assignedDate},
+			est_started = #{estStarted},
+			real_started = #{realStarted},
+			finished_by = #{finishedBy},
+			finished_date = #{finishedDate},
+			canceled_by = #{canceledBy},
+			canceled_date = #{canceledDate},
+			closed_by = #{closedBy},
+			closed_date = #{closedDate},
+			closed_reason = #{closedReason},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_task
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_task SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!--反逻辑删除-->
+	<update id="recoverByLogic">
+		UPDATE b_task SET 
+			del_flag = #{DEL_FLAG_NORMAL}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TaskInfo" statementType="STATEMENT">
+		select * FROM b_task  where ${propertyName} = '${value}'
+	</select>
+	
+	<!-- 根据迭代和状态查找记录-->
+	<select id="findByIterationAndStatus" resultType="TaskInfo">
+		select <include refid="taskInfoColumns"/> FROM b_task a where iteration = #{0} and status = #{1}
+	</select>
+	<!-- 获取工时 -->
+	<select id="getTimeByIid" resultType="TaskInfo" statementType="STATEMENT" parameterType="string">
+		select <include refid="taskInfoColumns"/>  FROM b_task a where a.iteration = '${value}'
+	</select> 
+</mapper>

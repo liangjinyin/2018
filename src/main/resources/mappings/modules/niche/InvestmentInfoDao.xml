@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.niche.dao.InvestmentInfoDao">
+    
+	<sql id="investmentInfoColumns">
+		a.program_name AS "programName",
+		a.project_type AS "projectType",
+		a.url AS "url",
+		a.release_time AS "time",
+		a.release_time AS "time1",
+		a.content AS "content",
+		a.company_belong  AS "companyBelong",
+		a.trade As "trade"
+	</sql>
+	
+	<sql id="investmentInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="InvestmentInfo" >
+		SELECT 
+			<include refid="investmentInfoColumns"/>
+		FROM ex_dc_investment_info a
+		<include refid="investmentInfoJoins"/>
+	</select> 
+	
+	<select id="getMailBody" resultType="com.tospur.modules.niche.entity.InvestmentInfo">
+		SELECT
+			program_name,
+			url,
+			content
+		FROM
+			ex_dc_investment_info
+		WHERE
+			STATUS = 0
+		AND release_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+	</select>
+	
+	<update id="updateMailStatus" parameterType="com.tospur.modules.niche.entity.InvestmentInfo">
+		update ex_dc_investment_info set status = #{status} where program_name = #{programName}
+	</update>
+	
+	<select id="findList" resultType="InvestmentInfo" >
+		SELECT 
+			<include refid="investmentInfoColumns"/>
+		FROM ex_dc_investment_info a
+		<include refid="investmentInfoJoins"/>
+		<where>
+			
+			<if test="programName != null and programName != ''">
+				AND a.program_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{programName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{programName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{programName},'%')</if>
+			</if>
+			<!--  <if test="time != null and time != ''">
+				AND  a.release_time = #{time}  
+			</if> --> 
+			 <!-- jinyin  -->
+			<if test="time != null and time != ''">
+		    	AND a.release_time >= #{time}
+		    </if> 
+		    <if test="time1 != null and time1 != ''">
+		    	AND a.release_time &lt;=#{time1}
+		    </if>
+			 <!-- jinyin  -->
+			<if test="companyBelong != null and companyBelong != ''">
+				AND a.company_belong LIKE 
+					<if test="dbName == 'oracle'">'%'||#{companyBelong}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{companyBelong}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{companyBelong},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.release_time DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="InvestmentInfo" >
+		SELECT 
+			<include refid="investmentInfoColumns"/>
+		FROM ex_dc_investment_info a
+		<include refid="investmentInfoJoins"/>
+		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	<insert id="insert">
+		INSERT INTO ex_dc_investment_info(
+			program_name,
+			project_type,
+			url,
+			time,
+			content,
+			trade,
+			company_belong
+		) VALUES (
+			#{programName},
+			#{projectType},
+			#{url},
+			#{time},
+			#{content},
+			#{trade},
+			#{companyBelong}
+		)
+	</insert>
+	<update id="update">
+		UPDATE ex_dc_investment_info SET 	
+			title = #{title},
+			url = #{url},
+			time = #{time},
+			content = #{content},
+			investment_no = #{investmentNo}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM ex_dc_investment_info
+		WHERE program_name = #{programName}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE ex_dc_investment_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE program_name = #{programName}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="InvestmentInfo" statementType="STATEMENT">
+		select * FROM ex_dc_investment_info  where ${propertyName} = '${value}' 
+	</select>
+	
+</mapper>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.meeting.dao.MeetingDao">
+    
+	<sql id="meetingColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.theme AS "theme",
+		a.caller AS "caller",
+		a.address AS "address",
+		a.recorder AS "recorder",
+		a.purpose AS "purpose",
+		a.attender AS "attender",
+		a.absentee AS "absentee",
+		a.content AS "content",
+		a.beginTime AS "beginTime",
+		a.mainEmail AS "mainEmail",
+		a.addEmail AS "addEmail",
+		a.status AS "status",
+		a.meetingTime AS "meetingTime"
+	</sql>
+	
+	<sql id="meetingJoins">
+		LEFT JOIN sys_user majorManager ON majorManager.id = a.mainEmail 
+	</sql>
+	
+    
+	<select id="get" resultType="Meeting" >
+		SELECT 
+			<include refid="meetingColumns"/>
+		FROM zt_meeting a
+		<include refid="meetingJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Meeting" >
+		SELECT 
+			<include refid="meetingColumns"/>
+		FROM zt_meeting a
+		<include refid="meetingJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Meeting" >
+		SELECT 
+			<include refid="meetingColumns"/>
+		FROM zt_meeting a
+		<include refid="meetingJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO zt_meeting(
+			<!-- id, -->
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			theme,
+			caller,
+			address,
+			recorder,
+			purpose,
+			attender,
+			absentee,
+			content,
+			beginTime,
+			mainEmail,
+			addEmail,
+			status,
+			meetingTime
+		) VALUES (
+			<!-- #{id}, -->
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{theme},
+			#{caller},
+			#{address},
+			#{recorder},
+			#{purpose},
+			#{attender},
+			#{absentee},
+			#{content},
+			#{beginTime},
+			#{mainEmail},
+			#{addEmail},
+			#{status},
+			#{meetingTime}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE zt_meeting SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			theme = #{theme},
+			caller = #{caller},
+			address = #{address},
+			recorder = #{recorder},
+			purpose = #{purpose},
+			attender = #{attender},
+			absentee = #{absentee},
+			content = #{content},
+			beginTime = #{beginTime},
+			mainEmail = #{mainEmail},
+			addEmail = #{addEmail},
+			status = #{status},
+			meetingTime = #{meetingTime}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM zt_meeting
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE zt_meeting SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Meeting" statementType="STATEMENT">
+		select * FROM zt_meeting  where ${propertyName} = '${value}'
+	</select>
+	<!-- 查询最新会议 -->
+	<select id="findMeeting" resultType="Meeting" parameterType="String">
+		select * FROM zt_meeting  where create_Date = (select max(create_date)  FROM zt_meeting  ) and status = 0 AND create_by=#{create}
+	</select>
+	
+</mapper>

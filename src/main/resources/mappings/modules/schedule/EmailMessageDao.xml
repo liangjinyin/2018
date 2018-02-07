@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.email.dao.EmailMessageDao">
+    
+	<sql id="emailMessageColumns">
+		a.message_id AS "id",
+		a.message_type AS "messageType",
+		a.message_status AS "messageStatus",
+		a.message_template AS "messageTemplate",
+		a.finish_time AS "finishTime",
+		a.receive_num AS "receiveNum",
+		a.copyto_num AS "copytoNum",
+		a.recipient_name AS "recipientName",
+		a.message_title AS "messageTitle",
+		a.message_content AS "messageContent",
+		a.message_file AS "messageFile"
+	</sql>
+	
+	<sql id="emailMessageJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="EmailMessage" >
+		SELECT 
+			<include refid="emailMessageColumns"/>
+		FROM email_message a
+		<include refid="emailMessageJoins"/>
+		WHERE a.message_id = #{id}
+	</select>
+	
+	<select id="findList" resultType="EmailMessage" >
+		SELECT 
+			<include refid="emailMessageColumns"/>
+		FROM email_message a
+		<include refid="emailMessageJoins"/>
+		<where>
+			<if test="messageTitle != null and messageTitle != ''">
+				AND a.message_title LIKE 
+					<if test="dbName == 'oracle'">'%'||#{messageTitle}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{messageTitle}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{messageTitle},'%')</if>
+			</if>
+			<if test="finishTime != null and finishTime != ''">
+				AND date_format(a.finish_time,'%Y-%m-%d') = date_format( #{finishTime},'%Y-%m-%d')  
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.finish_time desc
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="EmailMessage" >
+		SELECT 
+			<include refid="emailMessageColumns"/>
+		FROM email_message a
+		<include refid="emailMessageJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO email_message(
+			message_type,
+			message_status,
+			message_template,
+			finish_time,
+			receive_num,
+			copyto_num,
+			recipient_name,
+			message_title,
+			message_content,
+			message_file
+		) VALUES (
+			#{messageType},
+			#{messageStatus},
+			#{messageTemplate},
+			#{finishTime},
+			#{receiveNum},
+			#{copytoNum},
+			#{recipientName},
+			#{messageTitle},
+			#{messageContent},
+			#{messageFile}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE email_message SET 	
+			message_type = #{messageType},
+			message_status = #{messageStatus},
+			message_template = #{messageTemplate},
+			finish_time = #{finishTime},
+			receive_num = #{receiveNum},
+			copyto_num = #{copytoNum},
+			recipient_name = #{recipientName},
+			message_title = #{messageTitle},
+			message_content = #{messageContent},
+			message_file = #{messageFile}
+		WHERE message_id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM email_message
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="EmailMessage" statementType="STATEMENT">
+		select * FROM email_message  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.partner.dao.PartnerDao">
+    
+	<sql id="partnerColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.company AS "company",
+		a.signing_time AS "signingTime",
+		a.project AS "project",
+		a.contacts AS "contacts",
+		a.phone AS "phone",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="partnerJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+    
+	<select id="get" resultType="Partner" >
+		SELECT 
+			<include refid="partnerColumns"/>
+		FROM b_partner a
+		<include refid="partnerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Partner" >
+		SELECT 
+			<include refid="partnerColumns"/>
+		FROM b_partner a
+		<include refid="partnerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="company != null and company != ''">
+				AND a.company LIKE 
+					<if test="dbName == 'oracle'">'%'||#{company}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{company}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{company},'%')</if>
+			</if>
+			<if test="signingTime != null and signingTime != ''">
+				AND a.signing_time = #{signingTime}
+			</if>
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Partner" >
+		SELECT 
+			<include refid="partnerColumns"/>
+		FROM b_partner a
+		<include refid="partnerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_partner(
+			<!-- id, -->
+			name,
+			company,
+			signing_time,
+			project,
+			contacts,
+			phone,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag
+		) VALUES (
+			<!-- #{id}, -->
+			#{name},
+			#{company},
+			#{signingTime},
+			#{project},
+			#{contacts},
+			#{phone},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_partner SET 	
+			name = #{name},
+			company = #{company},
+			signing_time = #{signingTime},
+			project = #{project},
+			contacts = #{contacts},
+			phone = #{phone},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_partner
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_partner SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Partner" statementType="STATEMENT">
+		select * FROM b_partner  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

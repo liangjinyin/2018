@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.project.dao.ProjectEmailDao">
+    
+	<sql id="projectEmailColumns">
+		a.id AS "id",
+		a.project AS "project",
+		a.receiver AS "receiver",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="projectEmailJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="ProjectEmail" >
+		SELECT 
+			<include refid="projectEmailColumns"/>
+		FROM b_project_email a
+		<include refid="projectEmailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ProjectEmail" >
+		SELECT 
+			<include refid="projectEmailColumns"/>
+		FROM b_project_email a
+		<include refid="projectEmailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="project != null and project != ''">
+				AND a.project = #{project}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ProjectEmail" >
+		SELECT 
+			<include refid="projectEmailColumns"/>
+		FROM b_project_email a
+		<include refid="projectEmailJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_project_email(
+			id,
+			project,
+			receiver,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{project},
+			#{receiver},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_project_email SET 	
+			project = #{project},
+			receiver = #{receiver},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_project_email
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_project_email SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="ProjectEmail" statementType="STATEMENT">
+		select * FROM b_project_email  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

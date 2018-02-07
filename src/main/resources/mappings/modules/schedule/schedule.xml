@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.project.dao.TaskManageDao">
+    
+    
+    
+    <select id="findPersonProcess" resultType="map" >
+    
+    	SELECT 
+			zp.id AS pid,
+			zt.id  AS jid,
+			zp.`name` AS pname,
+			zt.`name` AS jname,
+			ze.`work` AS works,
+			ze.`left`,
+			ze.consumed,
+			ze.account,
+			ze.date
+			FROM zt_effort ze 
+			LEFT JOIN zt_task zt ON ze.objectID=zt.id
+			LEFT JOIN zt_project zp ON zp.id=zt.project
+			WHERE  1=1 AND 
+				zt.openedBy IN (
+									'zhangfeng',
+									'zhangwei',
+									'lvjiankang',
+									'liuguoyun',
+									'liminfang',
+									'lixiaoli'
+				   )
+				<if test="account != null and account != ''">
+				  and  ze.account =#{account}
+			    </if>
+			    <if test="workdate != null and workdate != ''">
+				  and  ze.date = #{workdate}
+			    </if>
+			
+			ORDER BY ze.date desc
+			limit 50
+    </select>
+    
+    <select id="findProjectProcess" resultType="map" parameterType="Project">
+    
+		    SELECT 
+					p.projectName,
+					p.id,
+					p.projectManager,
+					p.realdays,
+					p.days,
+					p.`end`,
+					p.`begin`,
+					p.`status`,
+					p.team,
+					p.closedDate,
+					IFNULL(p.jobNum,0) as jobNum,
+					IFNULL(p.doneNum,0) as doneNum,
+					IFNULL(p.waitNum,0) as waitNum,
+					IFNULL(p.doingNum,0) as doingNum,
+					IFNULL(p.doneProcess,0)*100 as doneProcess,
+					IFNULL(p.bugNum,0) as bugNum,
+					IFNULL(p.actNum,0) as actNum,
+					IFNULL(p.resolveNum,0) as resolveNum,
+					IFNULL(p.resolveRate,0)*100 as resolveRate,
+				    FORMAT((IFNULL(p.resolveRate,0) + IFNULL(p.doneProcess,0))/2,2)*100 AS projectProcess,
+				    p.openedDate
+				FROM 
+				(
+				  SELECT DISTINCT
+					p.`name` AS projectName,
+					p.id,
+					p.PM AS projectManager,
+				  TIMESTAMPDIFF(DAY,p.`begin`,p.`end`)  AS realdays,
+					p.days,
+					p.`end`,
+					p.`begin`,
+					p.`status`,
+					p.team,
+					p.closedDate,
+					 j.jobNum,
+					 j.doneNum,
+					 j.waitNum,
+					 j.doingNum,
+					 FORMAT(((j.jobNum-j.doingNum-j.waitNum)/ j.jobNum),2) AS doneProcess,
+					 bug.bugNum,
+					 bug.actNum,
+					 bug.resolveNum,
+				   FORMAT((bug.resolveNum/bug.bugNum),2) as  resolveRate,
+					p.openedDate
+				FROM
+					zt_task AS t
+				INNER JOIN zt_project AS p ON t.project = p.id
+				LEFT JOIN (
+					SELECT
+						COUNT(*) AS bugNum,
+				    COUNT(if(b.`status`='closed' or b.`status`='resolved',1,null)) AS resolveNum,
+						COUNT(if(b.`status`='active',1,null)) AS actNum,
+						b.project
+					FROM
+						zt_bug AS b	 
+					GROUP BY
+						b.project
+				) AS bug ON bug.project = t.project
+				LEFT JOIN  (
+				  SELECT 
+				    COUNT(*) AS jobNum,
+				    COUNT(if(zt.`status`='done' OR zt.`status`='closed' ,1,null)) AS doneNum, 
+				    COUNT(if(zt.`status`='wait',1,null)) AS waitNum, 
+						COUNT(if(zt.`status`='doing',1,null)) AS doingNum, 
+				    COUNT(if(zt.`status`='cancel',1,null)) AS cancelNum, 
+				    COUNT(if(zt.`status`='pause',1,null)) AS pauseNum, 
+				    zt.project 
+				  FROM zt_task AS zt 
+				  GROUP BY zt.project 
+				) j ON j.project =p.id
+				where 
+				 t.openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+				)
+				and  t.deleted='0'
+			) p
+			
+			<if test="name != null and name != ''">
+				where p.projectName like concat('%',#{name},'%')
+			</if>
+			
+    		ORDER BY p.`begin` DESC
+    </select>
+	
+	<select id="findProjects" resultType="map" parameterType="Project">
+		SELECT 
+			p.projectName,
+			p.id,
+			p.projectManager,
+			p.realdays,
+			p.days,
+			p.`end`,
+			p.`begin`,
+			p.`status`,
+			p.team,
+			p.closedDate,
+			IFNULL(p.jobNum,0) as jobNum,
+			IFNULL(p.doneNum,0) as doneNum,
+			IFNULL(p.waitNum,0) as waitNum,
+			IFNULL(p.doingNum,0) as doingNum,
+			IFNULL(p.doneProcess,0)*100 as doneProcess,
+			IFNULL(p.bugNum,0) as bugNum,
+			IFNULL(p.actNum,0) as actNum,
+			IFNULL(p.resolveNum,0) as resolveNum,
+			IFNULL(p.resolveRate,0)*100 as resolveRate,
+		    FORMAT((IFNULL(p.resolveRate,0) + IFNULL(p.doneProcess,0))/2,2)*100 AS projectProcess,
+			p.openedDate
+		FROM 
+		(
+		  SELECT DISTINCT
+			p.`name` AS projectName,
+			p.id,
+			p.PM AS projectManager,
+		  TIMESTAMPDIFF(DAY,p.`begin`,p.`end`)  AS realdays,
+			p.days,
+			p.`end`,
+			p.`begin`,
+			p.`status`,
+			p.team,
+			p.closedDate,
+		  j.jobNum,
+		  j.doneNum,
+		  j.waitNum,
+		  j.doingNum,
+		  FORMAT(((j.jobNum-j.doingNum-j.waitNum)/ j.jobNum),2) AS doneProcess,
+			bug.bugNum,
+		  bug.actNum,
+		  bug.resolveNum,
+		   FORMAT((bug.resolveNum/bug.bugNum),2) as  resolveRate,
+			p.openedDate
+		FROM
+			zt_task AS t
+		INNER JOIN zt_project AS p ON t.project = p.id
+		LEFT JOIN (
+			SELECT
+				COUNT(*) AS bugNum,
+		    COUNT(if(b.`status`='closed' or b.`status`='resolved',1,null)) AS resolveNum,
+				COUNT(if(b.`status`='active',1,null)) AS actNum,
+				b.project
+			FROM
+				zt_bug AS b
+			WHERE b.assignedTo=#{createBy.name} OR b.resolvedBy=#{createBy.name}
+			GROUP BY
+				b.project
+		) AS bug ON bug.project = t.project
+		LEFT JOIN  (
+		  SELECT 
+		    COUNT(*) AS jobNum,
+		    COUNT(if(zt.`status`='done' OR zt.`status`='closed' ,1,null)) AS doneNum, 
+		    COUNT(if(zt.`status`='wait',1,null)) AS waitNum, 
+				COUNT(if(zt.`status`='doing',1,null)) AS doingNum, 
+		    COUNT(if(zt.`status`='cancel',1,null)) AS cancelNum, 
+		    COUNT(if(zt.`status`='pause',1,null)) AS pauseNum, 
+		    zt.project 
+		  FROM zt_task AS zt 
+		  WHERE 1=1
+		  <if test="createBy!= null and createBy.name != null and createBy.name != ''">
+				and ( zt.assignedTo=#{createBy.name} OR zt.finishedBy=#{createBy.name})
+		  </if>
+		 
+		  GROUP BY zt.project 
+		) j ON j.project =p.id
+		WHERE
+		    1=1 
+		    
+			<if test="createBy!= null and createBy.name != null and createBy.name != ''">
+				and (
+				 t.finishedBy =#{createBy.name}
+				 OR t.assignedTo = #{createBy.name}
+				)
+		    </if>
+			and  t.openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+			)
+		   and  t.deleted='0'
+		) p
+		ORDER BY p.`begin` DESC
+	</select>
+	
+	<select id="findProjectById" resultType="map" >
+		SELECT 
+			p.projectName,
+			p.id,
+			p.projectManager,
+			p.realdays,
+			p.days,
+			p.`end`,
+			p.`begin`,
+			p.`status`,
+			p.team,
+			p.closedDate,
+			IFNULL(p.jobNum,0) as jobNum,
+			IFNULL(p.doneNum,0) as doneNum,
+			IFNULL(p.waitNum,0) as waitNum,
+			IFNULL(p.doingNum,0) as doingNum,
+			IFNULL(p.doneProcess,0)*100 as doneProcess,
+			IFNULL(p.bugNum,0) as bugNum,
+			IFNULL(p.actNum,0) as actNum,
+			IFNULL(p.resolveNum,0) as resolveNum,
+			IFNULL(p.resolveRate,0)*100 as resolveRate,
+		    FORMAT((IFNULL(p.resolveRate,0) + IFNULL(p.doneProcess,0))/2,2)*100 AS projectProcess,
+		    p.openedDate
+		FROM 
+		(
+		  SELECT DISTINCT
+			p.`name` AS projectName,
+			p.id,
+			p.PM AS projectManager,
+		  TIMESTAMPDIFF(DAY,p.`begin`,p.`end`)  AS realdays,
+			p.days,
+			p.`end`,
+			p.`begin`,
+			p.`status`,
+			p.team,
+			p.closedDate,
+			 j.jobNum,
+			 j.doneNum,
+			 j.waitNum,
+			 j.doingNum,
+			 FORMAT(((j.jobNum-j.doingNum-j.waitNum)/ j.jobNum),2) AS doneProcess,
+			 bug.bugNum,
+			 bug.actNum,
+			 bug.resolveNum,
+		   FORMAT((bug.resolveNum/bug.bugNum),2) as  resolveRate,
+			p.openedDate
+		FROM
+			zt_task AS t
+		INNER JOIN zt_project AS p ON t.project = p.id
+		LEFT JOIN (
+			SELECT
+				COUNT(*) AS bugNum,
+		    COUNT(if(b.`status`='closed' or b.`status`='resolved',1,null)) AS resolveNum,
+				COUNT(if(b.`status`='active',1,null)) AS actNum,
+				b.project
+			FROM
+				zt_bug AS b
+			WHERE b.assignedTo=#{name} OR b.resolvedBy=#{name}
+			GROUP BY
+				b.project
+		) AS bug ON bug.project = t.project
+		LEFT JOIN  (
+		  SELECT 
+		    COUNT(*) AS jobNum,
+		    COUNT(if(zt.`status`='done' OR zt.`status`='closed' ,1,null)) AS doneNum, 
+		    COUNT(if(zt.`status`='wait',1,null)) AS waitNum, 
+				COUNT(if(zt.`status`='doing',1,null)) AS doingNum, 
+		    COUNT(if(zt.`status`='cancel',1,null)) AS cancelNum, 
+		    COUNT(if(zt.`status`='pause',1,null)) AS pauseNum, 
+		    zt.project 
+		  FROM zt_task AS zt 
+		   WHERE zt.assignedTo=#{name} OR zt.finishedBy=#{name}
+		  GROUP BY zt.project 
+		) j ON j.project =p.id
+		WHERE
+			p.id=#{id}
+		) p
+	</select>
+	
+	<select id="findJobs" resultType="Task" parameterType="Task">
+		SELECT
+			p.`name` as projectName,
+			t.`name` as taskName,
+			t.assignedTo,
+			t.finishedBy,
+			t.canceledBy,
+			t.closedBy,
+			t.`status`,
+			t.`desc`,
+			t.assignedDate,
+			t.estStarted,
+			t.realStarted,
+			t.finishedDate,
+			t.canceledDate,
+			t.closedDate,
+			t.lastEditedDate,
+			p.PM as projectManager
+		FROM
+			zt_task AS t
+		INNER JOIN zt_project AS p ON t.project = p.id
+		WHERE  1=1 
+			<if test="id != null and id != ''">
+				AND t.project=#{id}
+			</if>
+			<if test="createBy!=null and createBy.name != null and createBy.name != ''">
+				AND (t.finishedBy=#{createBy.name} OR t.assignedTo=#{createBy.name} ) 
+			</if>
+			<if test="finishedBy != null and finishedBy != ''">
+				AND (t.finishedBy=#{finishedBy} OR t.assignedTo=#{finishedBy}) 
+			</if>
+			<if test="date != null and date != ''">
+				AND
+				(
+				date_format(t.lastEditedDate,'%Y-%m-%d') = #{date}
+				or
+				date_format(t.finishedDate,'%Y-%m-%d') = #{date}
+				)
+			</if>
+			 and t.openedBy IN (
+				'zhangfeng',
+				'zhangwei',
+				'lvjiankang',
+				'liuguoyun',
+				'liminfang',
+				'lixiaoli'
+			 )
+			and  t.deleted='0'
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY t.assignedDate DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findBugs" parameterType="Bug" resultType="Bug">
+		SELECT
+			b.title,
+			b.`status`,
+			b.openedBy,
+			b.assignedTo,
+			b.resolvedBy,
+			b.assignedDate,
+			b.resolvedDate,
+			b.closedDate
+		FROM
+			zt_bug AS b
+		WHERE   b.project= #{id}
+			<if test="createBy.name != null and createBy.name != ''">
+				and (b.assignedTo= #{createBy.name} OR b.resolvedBy=#{createBy.name})
+			</if>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY b.assignedDate DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findEmployee" resultType="string" >
+		SELECT DISTINCT ep.em FROM(
+		SELECT DISTINCT
+		zt_task.finishedBy AS em
+		FROM
+		zt_task
+		UNION 
+		SELECT  DISTINCT
+		zt_task.openedBy  AS em
+		FROM
+		zt_task
+		UNION 
+		SELECT  DISTINCT
+		zt_task.assignedTo  AS em
+		FROM
+		zt_task
+		) as ep
+		WHERE ep.em is NOT NULL AND ep.em !='' AND ep.em !='closed' AND ep.em !='admin'
+		AND  ep.em  NOT IN(
+		SELECT DISTINCT
+		b.openedBy 
+		FROM
+		zt_bug AS b
+		 WHERE b.openedBy  is  not NULL
+		)
+	</select>
+	<select id="findPms" resultType="string" >
+		SELECT DISTINCT p.PM FROM zt_project p
+		WHERE p.PM is not null AND p.PM !=''
+	</select>
+	
+	<update id="createDayReport" parameterType="map" >
+	  CREATE TABLE IF NOT EXISTS ${tableName}
+	  SELECT
+			t1.assignedTo,
+	         t2.`name` AS projectName,
+		 	t2.id,
+			t1.id AS jid,
+			t1.project,
+			t1.`name` ,
+			ze.`work` as taskName,
+			t1.`desc`,
+             case 
+				when t1.type='design'  then '设计型'
+				when t1.type='devel'  then '开发型'
+				when t1.type='study'  then '研究型'
+				when t1.type='test'  then '测试型'
+				else '其他' END as tasktype,CASE 
+				when t1.`status`='doing' then '正在进行'
+				when t1.`status`='done' then '完成'
+				when t1.`status`='wait' then '未开始'
+				when t1.`status`='pause' then '暂停'
+				else '其他' END  as `status`, 
+				case when (t1.`status`='done' and t1.consumed=0) then '100%'
+				 when (t1.`status`='wait' and t1.consumed=0) then '0%'
+				else CONCAT(round((ze.consumed/(ze.consumed+ze.`left`))*100,2) ,'%') end as procesed , 
+			t1.estStarted,
+			t1.deadline,
+			t1.openedBy,
+			t1.estimate,
+			ze.consumed,
+			ze.`left`,
+			t1.realStarted,
+			t1.finishedDate,
+			t1.finishedBy
+		FROM  zt_effort  as  ze 
+			LEFT JOIN zt_task as t1 ON t1.id=ze.objectID  
+			LEFT JOIN zt_project t2 ON  t1.project = t2.id
+		WHERE  
+	       t1.openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+				)
+			AND (
+				date_format(t1.lastEditedDate,'%Y-%m-%d')=date_format(now(),'%Y-%m-%d') and t1.deleted='0' and t1.`status` in ('wait','doing','done','pause')
+			)
+	</update>
+	
+	<select id="findDayTaskReport" resultType="map" parameterType="Task" >
+		 SELECT
+			t1.assignedTo,
+	         t2.`name` AS projectName,
+		 	t2.id,
+			t1.id AS jid,
+			t1.project,
+			t1.`name` ,
+			ze.`work` as taskName,
+			t1.`desc`,
+             case 
+				when t1.type='design'  then '设计型'
+				when t1.type='devel'  then '开发型'
+				when t1.type='study'  then '研究型'
+				when t1.type='test'  then '测试型'
+				else '其他' END as typed,CASE 
+				when t1.`status`='doing' then '正在进行'
+				when t1.`status`='done' then '完成'
+				when t1.`status`='wait' then '未开始'
+				when t1.`status`='pause' then '暂停'
+				else '其他' END  as `status`, 
+				case when (t1.`status`='done' and t1.consumed=0) then '100%'
+				 when (t1.`status`='wait' and t1.consumed=0) then '0%'
+				else CONCAT(round((ze.consumed/(ze.consumed+ze.`left`))*100,2) ,'%') end as procesed , 
+			t1.estStarted,
+			t1.deadline,
+			t1.openedBy,
+			t1.estimate,
+			ze.consumed,
+			ze.`left`,
+			t1.realStarted,
+			t1.finishedDate,
+			t1.finishedBy
+		FROM  zt_effort  as  ze 
+			LEFT JOIN zt_task as t1 ON t1.id=ze.objectID  
+			LEFT JOIN zt_project t2 ON  t1.project = t2.id
+		WHERE  
+	       t1.openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+				)
+			AND (
+				date_format(t1.lastEditedDate,'%Y-%m-%d')=date_format(now(),'%Y-%m-%d') and t1.deleted='0' and t1.`status` in ('wait','doing','done','pause')
+			)
+			<if test="finishedBy != null and finishedBy != ''">
+				and ze.account = #{finishedBy} 
+			</if>
+	</select>
+	
+	<select id="findWeekTaskReport"  resultType="map" parameterType="Task" >
+		SELECT
+			t.project as id,
+		    p.`name` AS projectName,
+			CASE
+			WHEN t.type = 'design' THEN
+				'设计型'
+			WHEN t.type = 'devel' THEN
+				'开发型'
+			WHEN t.type = 'study' THEN
+				'研究型'
+			WHEN t.type = 'test' THEN
+				'测试型'
+			ELSE
+				'其他'
+			END AS taskType,
+			 t.`name` AS taskName,
+			 t.`desc` ,
+			 t.assignedTo,
+			 CASE 
+				when t.`status`='doing' then '正在进行'
+				when t.`status`='done' then '完成'
+				when t.`status`='wait' then '未开始'
+				when t.`status`='pause' then '暂停'
+				else '其他' END  as `status`, case when (t.`status`='done' and t.consumed=0) then '100%'
+				 when (t.`status`='wait' and t.consumed=0) then '0%'
+				else CONCAT(round((t.consumed/(t.consumed+t.`left`))*100,2) ,'%') end as procesed ,
+			 t.estStarted,
+			 t.deadline,
+			 t.estimate,
+			 ze.consumed,
+			 ze.`left`,
+			 t.realStarted,
+			 ze.date  AS finishedDate,
+			 t.finishedBy
+			FROM
+			 zt_effort ze 
+     		LEFT JOIN  zt_task t ON t.id=ze.objectID
+			LEFT JOIN zt_project p ON p.id=t.project
+			WHERE
+			  1=1
+			  <if test="id != null and id != ''">
+			  	 and t.project =#{id} 
+			  </if>
+			  <if test="finishedBy != null and finishedBy != ''">
+				 and  ze.account= #{finishedBy} 
+			  </if>
+			AND 
+				t.openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+				)
+			and t.deleted='0'
+			and (
+				 t.lastEditedDate BETWEEN subdate(CURDATE(),date_format(curdate(),'%w')-1) 
+        	and subdate(curdate(),date_format(curdate(),'%w')-7)   
+         	and t.`status`in('done','doing','pause')
+				 or (t.estStarted &lt;= subdate(curdate(),date_format(curdate(),'%w')-7) and t.`status` ='wait' and t.lastEditedDate='0000-00-00 00:00:00' )
+				 or (t.estStarted &lt;= subdate(curdate(),date_format(curdate(),'%w')-7) and t.`status` ='pause' and t.lastEditedDate='0000-00-00 00:00:00' )
+			 )
+			and t.estStarted >= '2017-04-05' 
+		ORDER BY
+			ze.date  DESC
+	</select>
+	<select id="findUsersByProject" resultType="map" parameterType="Project">
+		SELECT DISTINCT
+			t.account AS userName,
+		    u.`name` AS zwName
+		FROM
+		zt_team AS t
+		LEFT JOIN sys_user AS u ON u.login_name=t.account
+		WHERE t.project in (74) and t.account != 'admin'
+	</select>
+	
+	<select id="findProjectsByWeek"  resultType="Project" >
+		SELECT DISTINCT
+			p.id ,
+			p.`name` AS name
+		FROM
+			zt_task t
+		LEFT JOIN zt_project p ON p.id=t.project
+		WHERE
+			t.openedBy IN (
+				'zhangfeng',
+				'zhangwei',
+				'lvjiankang',
+				'liuguoyun',
+				'liminfang',
+				'lixiaoli'
+			)
+		    and t.deleted='0'
+			and (
+				 t.lastEditedDate BETWEEN subdate(CURDATE(),date_format(curdate(),'%w')-1) 
+        	and subdate(curdate(),date_format(curdate(),'%w')-7)   
+         	and t.`status`in('done','doing','pause')
+				 or (t.estStarted &lt;= subdate(curdate(),date_format(curdate(),'%w')-7) and t.`status` ='wait' and t.lastEditedDate='0000-00-00 00:00:00' )
+				 or (t.estStarted &lt;= subdate(curdate(),date_format(curdate(),'%w')-7) and t.`status` ='pause' and t.lastEditedDate='0000-00-00 00:00:00' )
+			 )
+			and t.estStarted >= '2017-04-05' 
+	
+	</select>	
+	<select id="findWeekPorjectSumReport"   resultType="map" parameterType="Task" >
+		SELECT 
+			t1.* ,
+		    p.`name` AS projectName
+		FROM (
+		SELECT
+		  	project AS id,
+			COUNT(project) AS taskNum,
+		 	COUNT(IF(`status`='wait',1,NULL)) AS 'wait',
+			COUNT(IF(`status`='doing',1,NULL)) AS 'doing',
+			COUNT(IF(`status`='done',1,NULL)) AS 'done',
+			COUNT(IF(`status`='closed',1,NULL)) AS 'closed',
+			sum(estimate) as estimate,
+			sum(consumed) AS consumed ,
+			sum(`left`) as remainder
+		FROM
+			zt_task
+		WHERE
+			 1=1
+		  <if test="id != null and id != ''">
+		  	and project =#{id} 
+		  </if>
+		   <if test="finishedBy != null and finishedBy != ''">
+				and	 assignedTo=#{finishedBy} OR  finishedBy=#{finishedBy} 
+		   </if>
+			 AND 	openedBy IN (
+					'zhangfeng',
+					'zhangwei',
+					'lvjiankang',
+					'liuguoyun',
+					'liminfang',
+					'lixiaoli'
+				)
+			and deleted='0'
+			 and 
+			 (
+				lastEditedDate BETWEEN subdate(CURDATE(),date_format(curdate(),'%w')-1) and subdate(curdate(),date_format(curdate(),'%w')-7)   and `status`in('done','doing','pause')
+				or (estStarted &lt;=subdate(curdate(),date_format(curdate(),'%w')-7) and `status` ='wait' and lastEditedDate='0000-00-00 00:00:00' )
+				or (estStarted &lt;=subdate(curdate(),date_format(curdate(),'%w')-7) and `status` ='pause' and lastEditedDate='0000-00-00 00:00:00' )
+			)and estStarted >= '2017-04-05' 
+			GROUP BY
+				project 
+			) t1 
+			LEFT JOIN zt_project p ON p.id=t1.id
+	</select>
+	
+	
+	
+	<select id="findTaskReport" resultType="TaskReport" parameterType="TaskReport" >
+		SELECT
+			a.assignedto AS "assignedto",
+			a.projectname AS "projectname",
+			a.id AS "id",
+			a.project AS "project",
+			a.taskname AS "taskname",
+			a.desc AS "desc",
+			a.tasktype AS "tasktype",
+			a.status AS "status",
+			a.procesed AS "procesed",
+			a.eststarted AS "eststarted",
+			a.deadline AS "deadline",
+			a.openedby AS "openedby",
+			a.estimate AS "estimate",
+			a.consumed AS "consumed",
+			a.left AS "left",
+			a.realstarted AS "realstarted",
+			a.finisheddate AS "finisheddate",
+			a.finishedby AS "finishedby"
+		FROM
+			${tableName} as a 
+		WHERE  1=1
+		<if test="assignedto != null and assignedto != ''">
+		  and (a.assignedTo=#{assignedto} OR  a.finishedBy=#{assignedto}) 
+		</if>
+	</select>
+	
+</mapper>

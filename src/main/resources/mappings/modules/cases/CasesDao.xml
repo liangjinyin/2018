@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.cases.dao.CasesDao">
+    
+	<sql id="casesColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.address AS "address",
+		a.company AS "company",
+		a.charge AS "charge",
+		a.phone AS "phone",
+		a.begin_time as "beginTime",
+		a.end_time as "endTime",
+		a.team as "team",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="casesJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="Cases" >
+		SELECT 
+			<include refid="casesColumns"/>
+		FROM b_case a
+		<include refid="casesJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Cases" >
+		SELECT 
+			<include refid="casesColumns"/>
+		FROM b_case a
+		<include refid="casesJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="charge != null and createBy.name != null and charge != ''">
+				AND a.charge like concat('%',#{charge},'%')
+			</if>
+			<if test="company != null and company != ''">
+				AND a.company like concat('%',#{company},'%')
+			</if>
+			<if test="beginTime != null and beginTime != ''">
+				AND a.begin_time like concat('%',#{beginTime},'%')
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Cases" >
+		SELECT 
+			<include refid="casesColumns"/>
+		FROM b_case a
+		<include refid="casesJoins"/>
+			
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_case(
+			<!-- id, -->
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			name,
+			address,
+			company,
+			charge,
+			phone,
+			begin_time,
+			end_time,
+			team
+		) VALUES (
+			<!-- #{id}, -->
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{name},
+			#{address},
+			#{company},
+			#{charge},
+			#{phone},
+			#{beginTime},
+			#{endTime},
+			#{team}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_case SET 	
+			update_by = #{updateBy.name},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			name = #{name},
+			address = #{address},
+			company = #{company},
+			charge = #{charge},
+			phone = #{phone},
+			begin_time = #{beginTime},
+			end_time = #{endTime},
+			team = #{team}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_case
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_case SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Cases" statementType="STATEMENT">
+		select * FROM b_case  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

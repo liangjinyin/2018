@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.require.dao.RequirementsDao">
+    
+	<sql id="requirementsColumns">
+		a.id AS "id",
+		a.customer AS "customer",
+		a.get_date AS "getDate",
+		a.start_date AS "startDate",
+		a.name AS "name",
+		a.type AS "type",
+		a.product AS "product",
+		a.situation AS "situation",
+		a.bottleneck AS "bottleneck",
+		a.core AS "core",
+		a.solution AS "solution",
+		a.project AS "project",
+		a.pre_sale_manager AS "preSaleManager",
+		a.department AS "department",
+		a.sale_manager AS "saleManager",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.name",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="requirementsJoins">
+		LEFT JOIN sys_user uy ON uy.name=a.create_by
+		LEFT JOIN sys_office oy ON oy.id = uy.office_id
+		
+	</sql>
+	
+    
+	<select id="get" resultType="Requirements" >
+		SELECT 
+			<include refid="requirementsColumns"/>
+		FROM b_requirements a
+		<include refid="requirementsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	
+	<select id="findList" resultType="Requirements" >
+		SELECT 
+			<include refid="requirementsColumns"/>
+		FROM b_requirements a
+		<include refid="requirementsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+		</where>
+		<!-- 数据范围的过滤 -->
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Requirements" >
+		SELECT 
+			<include refid="requirementsColumns"/>
+		FROM b_requirements a
+		<include refid="requirementsJoins"/>
+		<where>
+			a.del_flag = 0
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyColumn="id" keyProperty="id" >
+		INSERT INTO b_requirements(
+			<!-- id, -->
+			customer,
+			get_date,
+			start_date,
+			name,
+			type,
+			product,
+			situation,
+			bottleneck,
+			core,
+			solution,
+			project,
+			pre_sale_manager,
+			department,
+			sale_manager,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag
+		) VALUES (
+			<!-- #{id}, -->
+			#{customer},
+			#{getDate},
+			#{startDate},
+			#{name},
+			#{type},
+			#{product},
+			#{situation},
+			#{bottleneck},
+			#{core},
+			#{solution},
+			#{project},
+			#{preSaleManager},
+			#{department},
+			#{saleManager},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.name},
+			#{updateDate},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_requirements SET 	
+			customer = #{customer},
+			get_date = #{getDate},
+			start_date = #{startDate},
+			name = #{name},
+			type = #{type},
+			product = #{product},
+			situation = #{situation},
+			bottleneck = #{bottleneck},
+			core = #{core},
+			solution = #{solution},
+			project = #{project},
+			pre_sale_manager = #{preSaleManager},
+			department = #{department},
+			sale_manager = #{saleManager},
+			update_by = #{updateBy.name},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_requirements
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_requirements SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="indexData" resultType="map">
+		  SELECT 
+			sum(`value`) as `value` ,
+		  `name`,projectId,requireId FROM (
+		SELECT
+		p.id as projectId,
+		p.requirements as requireId,
+		SUM(IFNULL(p.contract_amount ,0)) as `value`,
+		p.type as `name`
+		FROM
+		b_project AS p
+		GROUP BY p.type
+		UNION
+		select 
+		0 as projectId,
+		0 as requireId,
+		0 AS `value` ,
+		label as `name`
+		 FROM sys_dict d  
+		WHERE 
+		 d.type='product'
+		) t1 
+		
+		GROUP BY t1.`name`
+		 
+	</select>
+	
+	<select id="indexSaleData" resultType="map">
+		 
+		SELECT
+		 s.`name` AS sname,
+		 s.sales_target AS target,
+		 t1.snum,
+		 IFNULL( t1.amount,0) as amount,
+		 CONCAT(FORMAT((IFNULL( t1.amount*10000,0) / s.sales_target)*100,2),"","%") as rate 
+		FROM
+		b_salesman AS s 
+		LEFT JOIN (
+		SELECT p.sale_manager AS  sname,
+		count(ifnull(p.signing_time,null)) as snum ,
+		sum(ifnull(p.contract_amount,null)) as amount 
+		FROM  b_project AS p
+		GROUP BY p.sale_manager
+		) t1 ON t1.sname=s.`name`
+	</select>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Requirements" statementType="STATEMENT">
+		select * FROM b_requirements  where ${propertyName} = '${value}'
+	</select>
+
+</mapper>
