@@ -3,11 +3,12 @@
  */
 package com.tospur.modules.cases.web;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.ConstraintViolationException;
 
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -16,21 +17,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.google.common.collect.Lists;
 import com.tospur.common.config.Global;
 import com.tospur.common.persistence.Page;
-import com.tospur.common.utils.DateUtils;
 import com.tospur.common.utils.MyBeanUtils;
 import com.tospur.common.utils.StringUtils;
-import com.tospur.common.utils.excel.ExportExcel;
-import com.tospur.common.utils.excel.ImportExcel;
+import com.tospur.common.utils.TimeUtils;
 import com.tospur.common.web.BaseController;
 import com.tospur.modules.cases.entity.Cases;
+import com.tospur.modules.cases.entity.Look;
 import com.tospur.modules.cases.service.CasesService;
 
 /**
@@ -125,74 +122,33 @@ public class CasesController extends BaseController {
 		return "redirect:"+Global.getAdminPath()+"/cases/cases/?repage";
 	}
 	
-	/**
-	 * 导出excel文件
-	 */
-	@RequiresPermissions("cases:cases:export")
-    @RequestMapping(value = "export", method=RequestMethod.POST)
-    public String exportFile(Cases cases, HttpServletRequest request, HttpServletResponse response, RedirectAttributes redirectAttributes) {
-		try {
-            String fileName = "案场"+DateUtils.getDate("yyyyMMddHHmmss")+".xlsx";
-            Page<Cases> page = casesService.findPage(new Page<Cases>(request, response, -1), cases);
-    		new ExportExcel("案场", Cases.class).setDataList(page.getList()).write(response, fileName).dispose();
-    		return null;
-		} catch (Exception e) {
-			addMessage(redirectAttributes, "导出案场记录失败！失败信息："+e.getMessage());
-		}
-		return "redirect:"+Global.getAdminPath()+"/cases/cases/?repage";
-    }
-
-	/**
-	 * 导入Excel数据
-
-	 */
-	@RequiresPermissions("cases:cases:import")
-    @RequestMapping(value = "import", method=RequestMethod.POST)
-    public String importFile(MultipartFile file, RedirectAttributes redirectAttributes) {
-		try {
-			int successNum = 0;
-			int failureNum = 0;
-			StringBuilder failureMsg = new StringBuilder();
-			ImportExcel ei = new ImportExcel(file, 1, 0);
-			List<Cases> list = ei.getDataList(Cases.class);
-			for (Cases cases : list){
-				try{
-					casesService.save(cases);
-					successNum++;
-				}catch(ConstraintViolationException ex){
-					failureNum++;
-				}catch (Exception ex) {
-					failureNum++;
-				}
-			}
-			if (failureNum>0){
-				failureMsg.insert(0, "，失败 "+failureNum+" 条案场记录。");
-			}
-			addMessage(redirectAttributes, "已成功导入 "+successNum+" 条案场记录"+failureMsg);
-		} catch (Exception e) {
-			addMessage(redirectAttributes, "导入案场失败！失败信息："+e.getMessage());
-		}
-		return "redirect:"+Global.getAdminPath()+"/cases/cases/?repage";
-    }
 	
 	/**
-	 * 下载导入案场数据模板
-	 */
-	@RequiresPermissions("cases:cases:import")
-    @RequestMapping(value = "import/template")
-    public String importFileTemplate(HttpServletResponse response, RedirectAttributes redirectAttributes) {
-		try {
-            String fileName = "案场数据导入模板.xlsx";
-    		List<Cases> list = Lists.newArrayList(); 
-    		new ExportExcel("案场数据", Cases.class, 1).setDataList(list).write(response, fileName).dispose();
-    		return null;
-		} catch (Exception e) {
-			addMessage(redirectAttributes, "导入模板下载失败！失败信息："+e.getMessage());
-		}
-		return "redirect:"+Global.getAdminPath()+"/cases/cases/?repage";
+     * 案场看板列表页面
+     */
+    @RequiresPermissions("cases:cases:looklist")
+    @RequestMapping(value ="lookList")
+    public String lookList(Model model,String name,Look look) {
+        List<Cases> casesList = casesService.getAllCasesList();
+        Date date = new Date();
+        
+        List<Map<String,Object>> record = casesService.getLookList(name,TimeUtils.formatDate(date, "yyyy-MM"));
+        model.addAttribute("record", record);
+        model.addAttribute("casesList", casesList);
+        return "modules/cases/lookList";
     }
-	
-	
-	
 
+    /**
+     * 销售看板
+     */
+    @RequiresPermissions("cases:cases:salelist")
+    @RequestMapping(value ="salelist")
+    public String salelist(Model model,String name) {
+        Date date = new Date();
+        List<Map<String,Object>> sale = casesService.getSalelist(name,TimeUtils.formatDate(date, "yyyy-MM"));
+        model.addAttribute("sale", sale);
+        return "modules/cases/saleLook";
+    }
+    
+   
 }

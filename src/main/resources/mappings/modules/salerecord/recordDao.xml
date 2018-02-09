@@ -26,9 +26,9 @@
 		)
 	</insert>
 	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
-	<select id="getPriceByCasesAndHouses" resultType="Houses" parameterType="String">
+	<select id="getHousesByCasesAndHouses" resultType="Houses" parameterType="String">
 		select 
 		<include refid="housesColumns"/>
-		FROM b_houses  where cases = #{cases} and type = #{houses}
+		FROM b_houses a where a.cases = #{cases} and a.type = #{houses}
 	</select>
 </mapper>

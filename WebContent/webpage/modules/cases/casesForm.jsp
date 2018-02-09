@@ -131,11 +131,21 @@
 					</td>
 				</tr>
 				<tr>	
+					<td align="right"><span class="star">*</span>规定月销售额：</td>
+					<td >
+						<div class="input-group">
+						<form:input path="sale" htmlEscape="false" maxlength="64" class="form-control required"/>
+						<span class="input-group-addon">万</span>
+						</div>
+					</td>
+				</tr>
+				<tr>	
 					<td align="right"><span class="star">*</span>开盘时间：</td>
 					<td >
 						<input id="b_times" name="beginTime" type="text" maxlength="20" style="width:200px;"  class="laydate-icon form-control layer-date required"
 									value="<fmt:formatDate value="${cases.beginTime}" pattern="yyyy-MM-dd"/>"/>
 					</td>
+					
 				</tr>
 				<tr>	
 					<td align="right"><span class="star">*</span>结束时间：</td>

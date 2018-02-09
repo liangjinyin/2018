@@ -3,10 +3,7 @@
  */
 package com.tospur.modules.houses.entity;
 
-import org.hibernate.validator.constraints.Length;
-
 import com.tospur.common.persistence.DataEntity;
-import com.tospur.common.utils.excel.annotation.ExcelField;
 
 /**
  * 房型Entity
@@ -16,12 +13,12 @@ import com.tospur.common.utils.excel.annotation.ExcelField;
 public class Houses extends DataEntity<Houses> {
 	
 	private static final long serialVersionUID = 1L;
-	private String price;		// 房价
+	private Integer price;		// 房价
 	private String type;		// 房子类型
 	private String area;		// 面积
-	private String num;		// 总数量
+	private Integer num;		// 总数量
 	private String cases;       // 所属案场
-	private String spare;      //剩余数量
+	private Integer spare;      //剩余数量
 	
 	public Houses() {
 		super();
@@ -31,61 +28,65 @@ public class Houses extends DataEntity<Houses> {
 		super(id);
 	}
 
-	@Length(min=0, max=64, message="房价长度必须介于 0 和 64 之间")
-	@ExcelField(title="房价", align=2, sort=7)
-	public String getPrice() {
-		return price;
-	}
+    public Integer getPrice()
+    {
+        return price;
+    }
 
-	public void setPrice(String price) {
-		this.price = price;
-	}
-	
-	@Length(min=0, max=64, message="房子类型长度必须介于 0 和 64 之间")
-	@ExcelField(title="房子类型", align=2, sort=8)
-	public String getType() {
-		return type;
-	}
+    public void setPrice(Integer price)
+    {
+        this.price = price;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	@Length(min=0, max=64, message="面积长度必须介于 0 和 64 之间")
-	@ExcelField(title="面积", align=2, sort=9)
-	public String getArea() {
-		return area;
-	}
+    public String getType()
+    {
+        return type;
+    }
 
-	public void setArea(String area) {
-		this.area = area;
-	}
-	
-	public void setNum(String num){
-		this.num = num;
-	}
+    public void setType(String type)
+    {
+        this.type = type;
+    }
 
-	public String getNum(){
-		return num;
-	}
-	
-	public void setCases(String cases){
-		this.cases = cases;
-	}
+    public String getArea()
+    {
+        return area;
+    }
 
-	public String getCases(){
-		return cases;
-	}
+    public void setArea(String area)
+    {
+        this.area = area;
+    }
 
-    public String getSpare()
+    public Integer getNum()
+    {
+        return num;
+    }
+
+    public void setNum(Integer num)
+    {
+        this.num = num;
+    }
+
+    public String getCases()
+    {
+        return cases;
+    }
+
+    public void setCases(String cases)
+    {
+        this.cases = cases;
+    }
+
+    public Integer getSpare()
     {
         return spare;
     }
 
-    public void setSpare(String spare)
+    public void setSpare(Integer spare)
     {
         this.spare = spare;
     }
-	
+
 	
 }

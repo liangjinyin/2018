@@ -221,7 +221,7 @@
                 <iframe class="J_iframe" name="iframe0" width="100%" height="100%" src="${ctx}/home" frameborder="0" data-id="${ctx}/home" seamless></iframe>
             </div>
             <div class="footer">
-                <div class="pull-left"><a href="http://112.74.22.71/">微构科技</a> &copy; 2017-0622</div>
+                <div class="pull-left"><a href="http://www.gpnu.edu.cn/">广东技术师范学院</a> &copy; 20180208</div>
             </div>
         </div>
         <!--右侧部分结束-->

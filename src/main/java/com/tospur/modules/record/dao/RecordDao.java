@@ -17,7 +17,10 @@ public interface RecordDao extends CrudDao<Record>{
 
    
     public Houses getHousesByCasesAndHouses(@Param("cases")String cases, @Param("houses")String houses);
-
+    /**
+     * 保存成交记录
+     * @param temp
+     */
     public void saveRecord(Record temp);
     
   

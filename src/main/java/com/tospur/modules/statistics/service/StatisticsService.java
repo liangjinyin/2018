@@ -3,13 +3,11 @@ package com.tospur.modules.statistics.service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Maps;
 import com.tospur.common.service.CrudService;
 import com.tospur.modules.project.dao.ProjectDao;
 import com.tospur.modules.project.entity.Project;
@@ -17,8 +15,6 @@ import com.tospur.modules.statistics.dao.StatisticsDao;
 import com.tospur.modules.statistics.entity.EmployeeLoad;
 import com.tospur.modules.statistics.entity.ProductIteration;
 import com.tospur.modules.statistics.entity.TaskCollect;
-import com.tospur.modules.sys.entity.User;
-import com.tospur.modules.sys.utils.UserUtils;
 
 /**
  * 统计Service
@@ -36,7 +32,7 @@ public class StatisticsService extends CrudService<ProjectDao, Project> {
        //User user = UserUtils.getUser();
        //user.getSqlMap().put("dsf", super.dataScopeFilter(user, "oy", "uy"));
        
-       
+        
         return statisticsDao.findAllList(product, beginTime, endTime);
     }
     

@@ -57,10 +57,11 @@ public class CustomerService extends CrudService<CustomerDao, Customer> {
 		    temp.setHouses(customer.getTarget());
 		    temp.setSaleMan(customer.getCreateBy().getName());
 		    temp.setPrice(houses.getPrice());
+		    temp.setCustomer(customer.getName());
 		    
 		    customer.setDelFlag("1");//标识添加过交易记录
 		    
-		    houses.setSpare(Integer.parseInt(houses.getSpare())-1+"");
+		    houses.setSpare(houses.getSpare()-1);
 		    housesDao.update(houses);
 		    recordDao.saveRecord(temp);
 		}else{

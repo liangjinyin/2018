@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tospur.common.persistence.Page;
 import com.tospur.common.service.CrudService;
+import com.tospur.modules.cases.dao.CasesDao;
+import com.tospur.modules.cases.entity.Cases;
 import com.tospur.modules.houses.dao.HousesDao;
 import com.tospur.modules.houses.entity.Houses;
 
@@ -26,6 +28,8 @@ public class HousesService extends CrudService<HousesDao, Houses> {
 
     @Autowired
     private HousesDao housesDao;
+    @Autowired
+    private CasesDao casesDao;
     
 	public Houses get(String id) {
 		return super.get(id);
@@ -44,7 +48,10 @@ public class HousesService extends CrudService<HousesDao, Houses> {
 	    if(!StringUtils.isNotEmpty(houses.getId())){
 	        houses.setSpare(houses.getNum());
 	    }
+	    Cases temp =  casesDao.getCasesByName(houses.getCases());
+	    temp.setNum(temp.getNum()+houses.getNum());
 		super.save(houses);
+		casesDao.update(temp);
 	}
 	
 	@Transactional(readOnly = false)

@@ -12,6 +12,8 @@
 		a.begin_time as "beginTime",
 		a.end_time as "endTime",
 		a.team as "team",
+		a.num as  "num",
+		a.sale as "sale",
 		a.create_by AS "createBy.name",
 		a.create_date AS "createDate",
 		a.update_by AS "updateBy.name",
@@ -83,7 +85,9 @@
 			phone,
 			begin_time,
 			end_time,
-			team
+			team,
+			num,
+			sale
 		) VALUES (
 			<!-- #{id}, -->
 			#{createBy.name},
@@ -99,7 +103,9 @@
 			#{phone},
 			#{beginTime},
 			#{endTime},
-			#{team}
+			#{team},
+			#{num},
+			#{sale}
 		)
 	</insert>
 	
@@ -115,7 +121,9 @@
 			phone = #{phone},
 			begin_time = #{beginTime},
 			end_time = #{endTime},
-			team = #{team}
+			team = #{team},
+			num = #{num},
+			sale = #{sale}
 		WHERE id = #{id}
 	</update>
 	
@@ -138,5 +146,17 @@
 	<select id="findUniqueByProperty" resultType="Cases" statementType="STATEMENT">
 		select * FROM b_case  where ${propertyName} = '${value}'
 	</select>
+	
+	<select id="getCasesByName" resultType="Cases" parameterType="String" >
+		select <include refid="casesColumns"/> 
+		FROM b_case a where a.name = #{casesName}
+	</select>
+	
+	<select id="getTeamByName" resultType="String" parameterType="String" >
+		select team 
+		FROM b_case  where name = #{casesName}
+	</select>
+	
+
 	
 </mapper>

@@ -1,7 +1,10 @@
 package com.tospur.modules.customer.web;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -256,9 +259,19 @@ public class CustomerController extends BaseController {
 	//////////////////////////////////////////////AJAX//////////////////////////////////
 	@RequestMapping("getHouses")
 	@ResponseBody
-	public List<Houses> getHouses(String name){
+	public Map<String,Object> getHouses(String name){
+	    Map<String,Object> map = new HashMap<String,Object>();
 	    List<Houses> housesList = housesService.getListByCasesName(name);
-	    return housesList;
+	    List<String> team = casesService.getTeamByName(name);
+	    List<String> list = new ArrayList<String>();
+	   
+        for (Houses houses : housesList)
+        {
+            list.add(houses.getType());
+        }
+        map.put("typeList", list);
+        map.put("teamList", team);
+	    return map;
 	}
 	
 	

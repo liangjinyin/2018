@@ -24,6 +24,8 @@ public class Cases extends DataEntity<Cases> {
 	private Date beginTime;    // 开盘日期
     private Date endTime;      // 结束日期
     private String team;       //案场销售团队
+    private Integer num;       //总数
+    private Integer sale;      //指定月销售额
 	
 	public Cases() {
 		super();
@@ -110,4 +112,26 @@ public class Cases extends DataEntity<Cases> {
     public String getTeam(){
         return team;
     }
+
+    public Integer getNum()
+    {
+        return num;
+    }
+
+    public void setNum(Integer num)
+    {
+        this.num = num;
+    }
+
+    public Integer getSale()
+    {
+        return sale;
+    }
+
+    public void setSale(Integer sale)
+    {
+        this.sale = sale;
+    }
+    
+    
 }

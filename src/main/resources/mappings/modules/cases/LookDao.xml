@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tospur.modules.cases.dao.LookDao">
+    
+	
+	
+	<!-- <resultMap id="Look" type="com.tospur.modules.cases.entity.Look">
+       <result property="casesName" column="casesName"/>
+       <result property="sold" column="sold"/>
+       <result property="price" column="price"/>
+       <result property="spare" column="spare"/>
+    </resultMap> -->
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="getLookList" resultType="map" parameterType="String">
+		SELECT
+			a. NAME AS casesName,
+			a.num,
+			a.num - t.su sold,
+			t.su spare,
+			substr(c.sale_date, 1, 7) saleDate,
+			t1.price,
+			COUNT(1) coun
+		FROM
+			b_case a
+		JOIN (
+			SELECT
+				sum(price) price,
+				cases
+			FROM
+				b_sale_record where substr(sale_date, 1, 7) = #{date}
+			GROUP BY
+				cases
+		) t1 ON t1.cases = a.`name`
+		JOIN b_sale_record c ON c.cases = a.`name`
+		JOIN (
+			SELECT
+				sum(spare) su,
+				cases
+			FROM
+				b_houses
+			GROUP BY
+				cases
+		) t ON t.cases = a.`name`
+		WHERE
+			substr(c.sale_date, 1, 7) = #{date}
+		GROUP BY
+			casesName,
+			saleDate
+	</select>
+	
+	<select id="getSalelist" resultType="map" parameterType="String">
+		SELECT
+		   sum(a.price) price,
+		   a.sale_by saleMan,
+		   COUNT(1) num,
+		   b.`name`,
+		   b.sale salePrice,
+		   CONCAT(
+		      SUBSTR(
+		         sum(a.price) / b.sale * 100,
+		         1,
+		         5
+		      ),
+		      "%"
+		   ) com
+		FROM
+		   b_sale_record a
+		JOIN b_case b ON b. NAME = a.cases
+		WHERE
+		   substr(a.sale_date, 1, 7) = #{date}
+		GROUP BY
+		   a.sale_by
+	</select>
+</mapper>
